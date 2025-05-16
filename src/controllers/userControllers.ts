@@ -77,7 +77,16 @@ export const userLogin = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        const isPasswordValid = await comparePassword(password, existUser.password || "");
+        if (existUser.googleId && existUser.password === "") {
+            sendResponse(res, false, null, "Please login with google", STATUS_CODES.BAD_REQUEST);
+            return;
+        }
+
+        const isPasswordValid = existUser.password ? await comparePassword(password, existUser.password) : false;
+        if (!isPasswordValid) {
+            sendResponse(res, false, null, "Invalid Credentials", STATUS_CODES.UNAUTHORIZED);
+            return;
+        }
 
         if (!process.env.JWT_SECRET) {
             throw new Error("jwt secret is not defined");
@@ -86,7 +95,7 @@ export const userLogin = async (req: Request, res: Response): Promise<void> => {
         const token = jwt.sign(
             { id: existUser.id, role: "USER" },
             process.env.JWT_SECRET,
-            { expiresIn: "90d" }
+            { expiresIn: "30d" }
         );
 
 
@@ -110,7 +119,6 @@ export const userLogin = async (req: Request, res: Response): Promise<void> => {
 
 export const google = passport.authenticate('google', { scope: ['profile', 'email'] });
 
-
 export const googleCallback = (req: Request, res: Response) => {
     passport.authenticate('google', {
         session: false,
@@ -123,7 +131,7 @@ export const googleCallback = (req: Request, res: Response) => {
             const token = jwt.sign(
                 { id: user.id, role: user.role },
                 process.env.JWT_SECRET,
-                { expiresIn: '90d' }
+                { expiresIn: '30d' }
             );
 
             console.log(user, jwt);

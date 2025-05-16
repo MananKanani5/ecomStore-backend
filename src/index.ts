@@ -3,12 +3,19 @@ import routes from './routes';
 import { errorHandler } from './middlewares/errorHandler';
 import passport from 'passport';
 import { passportConfig } from './passport';
+import cors from 'cors';
 
 const app = express()
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 passportConfig(passport);
 app.use(passport.initialize());
+app.use(cors(
+  {
+    origin: "*",
+    credentials: true,
+  }
+));
 
 
 app.use("/api", routes);
