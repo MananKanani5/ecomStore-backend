@@ -15,7 +15,7 @@ model user {
   password     String?
   phone        String?
   profileImage String?
-  googleId     String?   @unique
+  googleId     String?
   role         role      @default(USER)
   isActive     Boolean   @default(true)
   isDeleted    Boolean   @default(false)

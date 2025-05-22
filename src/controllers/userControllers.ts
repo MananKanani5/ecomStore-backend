@@ -13,6 +13,20 @@ import passport from "passport";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+const userWithoutPassword = {
+    id: true,
+    firstName: true,
+    lastName: true,
+    email: true,
+    phone: true,
+    profileImage: true,
+    role: true,
+    googleId: true,
+    isActive: true,
+    createdAt: true,
+    updatedAt: true,
+};
+
 export const userRegister = async (req: Request, res: Response): Promise<void> => {
 
     const { error } = validateUserRegister(req.body);
@@ -42,10 +56,17 @@ export const userRegister = async (req: Request, res: Response): Promise<void> =
                 email,
                 password: await hashPassword(password),
                 phone,
-            }
+            }, select: userWithoutPassword
         });
 
-        sendResponse(res, true, newUser, 'User registered successfully', STATUS_CODES.OK);
+
+        const formatteduser = {
+            ...newUser,
+            createdAt: dayjs.utc(newUser?.createdAt).tz("Asia/Kolkata").format("YYYY-MM-DDTHH:mm"),
+            updatedAt: dayjs.utc(newUser?.updatedAt).tz("Asia/Kolkata").format("YYYY-MM-DDTHH:mm"),
+        };
+
+        sendResponse(res, true, formatteduser, 'User registered successfully', STATUS_CODES.OK);
     } catch (error: any) {
         sendResponse(res, false, error, error.message, STATUS_CODES.SERVER_ERROR);
     }
@@ -100,9 +121,9 @@ export const userLogin = async (req: Request, res: Response): Promise<void> => {
 
 
         const user = await prisma.user.findUnique({
-            where: { email }
+            where: { email },
+            select: userWithoutPassword,
         })
-
 
         const formatteduser = {
             ...user,
